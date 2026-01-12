@@ -140,6 +140,17 @@ target = st.selectbox(
 
 X = df_encoded.drop(columns=[target])
 y = df_encoded[target]
+# ---- Sécurité : supprimer NaN / inf dans X et y (obligatoire pour sklearn)
+X = X.replace([np.inf, -np.inf], np.nan)
+
+# si NaN existent encore, on remplit par la médiane des colonnes
+if X.isna().any().any():
+    X = X.fillna(X.median(numeric_only=True))
+
+# pour être sûr que y ne contient pas NaN
+y = y.replace([np.inf, -np.inf], np.nan)
+if y.isna().any():
+    y = y.fillna(y.median())
 
 st.success(f"Target sélectionnée : {target}")
 st.write("Dimensions X :", X.shape)
