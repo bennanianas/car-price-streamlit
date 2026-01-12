@@ -35,6 +35,26 @@ st.markdown(
 """
 )
 st.divider()
+# =========================
+# Contrôles
+# =========================
+
+st.subheader("Contrôles")
+
+if st.button("🔄 Reset / Recommencer"):
+    keys_to_clear = [
+        "df_loaded", "df_clean", "df_dropped", "df_encoded",
+        "target", "X", "y", "scaler",
+        "X_train", "X_test", "y_train", "y_test",
+        "model", "model_name"
+    ]
+
+    for k in keys_to_clear:
+        if k in st.session_state:
+            del st.session_state[k]
+
+    st.success("Session réinitialisée ✅")
+    st.rerun()
 
 
 # =========================
@@ -88,6 +108,7 @@ st.dataframe(info_df, use_container_width=True)
 
 
 # =========================
+# =========================
 # 3) Traitement NaN
 # =========================
 st.subheader("Traitement des valeurs manquantes (NaN)")
@@ -100,12 +121,12 @@ strategy = st.selectbox("Stratégie de remplacement (numérique)", ["median", "m
 if st.button("Appliquer le traitement des NaN"):
     df_clean = df.copy()
 
-    # convertir object -> numeric si possible (ex: max_power)
+    # Convertir object -> numeric si possible (ex: max_power)
     for c in nan_cols:
         if df_clean[c].dtype == "object":
             df_clean[c] = pd.to_numeric(df_clean[c], errors="coerce")
 
-    # remplacer NaN sur colonnes numériques seulement
+    # Remplacer NaN sur colonnes numériques seulement
     for c in nan_cols:
         if pd.api.types.is_numeric_dtype(df_clean[c]):
             if strategy == "median":
@@ -117,11 +138,20 @@ if st.button("Appliquer le traitement des NaN"):
     st.write("NaN après traitement :")
     st.dataframe(df_clean.isna().sum(), use_container_width=True)
 
+    # Sauvegarde session
     st.session_state["df_clean"] = df_clean
 
+    # Bouton de téléchargement du dataset nettoyé
+    st.download_button(
+        label="📥 Télécharger le dataset nettoyé (df_clean.csv)",
+        data=df_clean.to_csv(index=False).encode("utf-8"),
+        file_name="df_clean.csv",
+        mime="text/csv"
+    )
 
 # Dataset de travail (si NaN appliqué, sinon df)
 df_work = st.session_state.get("df_clean", df)
+
 
 
 # =========================
