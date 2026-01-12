@@ -13,6 +13,28 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 st.set_page_config(page_title="Car Price Prediction", page_icon="🚗", layout="wide")
 st.title("🚗 Car Price Prediction")
+st.subheader("État du pipeline")
+
+s1 = "✅" if st.session_state.get("df_loaded") else "⬜"
+s2 = "✅" if st.session_state.get("df_clean") is not None else "⬜"
+s3 = "✅" if st.session_state.get("df_dropped") is not None else "⬜"
+s4 = "✅" if st.session_state.get("df_encoded") is not None else "⬜"
+s5 = "✅" if st.session_state.get("target") is not None else "⬜"
+s6 = "✅" if st.session_state.get("scaler") is not None else "⬜"
+s7 = "✅" if st.session_state.get("model") is not None else "⬜"
+
+st.markdown(
+    f"""
+- {s1} Dataset chargé  
+- {s2} NaN traités  
+- {s3} Colonnes supprimées  
+- {s4} Encodage terminé  
+- {s5} Target sélectionnée  
+- {s6} Split + Normalisation  
+- {s7} Modèle entraîné
+"""
+)
+st.divider()
 
 
 # =========================
@@ -22,20 +44,27 @@ st.subheader("Chargement du dataset")
 
 use_demo = st.checkbox("Utiliser le dataset d'exemple (Cardekho)")
 
-uploaded_file = st.file_uploader("Ou uploader un autre fichier CSV", type=["csv"])
+uploaded_file = st.file_uploader(
+    "Ou uploader un autre fichier CSV",
+    type=["csv"]
+)
 
 if use_demo:
     df = pd.read_csv("cardekho.csv")
+    st.session_state["df_loaded"] = True
     st.success("Dataset d'exemple chargé ✅")
+
 elif uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
+    st.session_state["df_loaded"] = True
     st.success("Fichier CSV chargé avec succès ✅")
+
 else:
     st.info("Veuillez choisir un mode de chargement pour continuer.")
     st.stop()
 
-st.success("Fichier chargé avec succès ✅")
 
+# Aperçu du dataset
 st.subheader("Aperçu du dataset")
 st.write(f"Dimensions : {df.shape[0]} lignes × {df.shape[1]} colonnes")
 st.dataframe(df.head(20), use_container_width=True)
