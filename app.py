@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import pickle
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -261,6 +262,31 @@ else:
         st.success(f"✅ Meilleur modèle sélectionné : **{best_name}**")
         st.session_state["model"] = best_model
         st.session_state["model_name"] = best_name
+import pickle
+
+st.subheader("Exporter le modèle")
+
+model = st.session_state.get("model")
+scaler = st.session_state.get("scaler")
+X = st.session_state.get("X")
+
+if model is not None and scaler is not None and X is not None:
+    package = {
+        "model": model,
+        "scaler": scaler,
+        "feature_columns": list(X.columns),
+    }
+
+    pkl_bytes = pickle.dumps(package)
+
+    st.download_button(
+        label="📥 Télécharger le modèle (model_package.pkl)",
+        data=pkl_bytes,
+        file_name="model_package.pkl",
+        mime="application/octet-stream",
+    )
+else:
+    st.info("Entraîne d'abord un modèle et applique la normalisation pour pouvoir exporter.")
 
 
 # =========================
