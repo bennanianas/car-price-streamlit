@@ -194,22 +194,64 @@ st.subheader("Choix de l'algorithme et entraînement du modèle")
 
 X_train = st.session_state.get("X_train")
 y_train = st.session_state.get("y_train")
+X_test = st.session_state.get("X_test")
+y_test = st.session_state.get("y_test")
 
-if X_train is None or y_train is None:
+if X_train is None or y_train is None or X_test is None or y_test is None:
     st.info("Veuillez d'abord effectuer la division Train/Test (Étape 7).")
     st.stop()
 
-model_choice = st.selectbox("Choisir un algorithme", ["Régression Linéaire", "Random Forest"])
+mode = st.radio("Mode d'entraînement", ["Un seul modèle", "Comparer 2 modèles"], horizontal=True)
 
-if st.button("Entraîner le modèle"):
-    if model_choice == "Régression Linéaire":
-        model = LinearRegression()
-    else:
-        model = RandomForestRegressor(n_estimators=200, random_state=42)
+def eval_model(m, Xte, yte):
+    pred = m.predict(Xte)
+    mae = mean_absolute_error(yte, pred)
+    rmse = np.sqrt(mean_squared_error(yte, pred))
+    r2 = r2_score(yte, pred)
+    return mae, rmse, r2
 
-    model.fit(X_train, y_train)
-    st.success("Modèle entraîné avec succès ✅")
-    st.session_state["model"] = model
+if mode == "Un seul modèle":
+    model_choice = st.selectbox("Choisir un algorithme", ["Régression Linéaire", "Random Forest"])
+
+    if st.button("Entraîner le modèle"):
+        if model_choice == "Régression Linéaire":
+            model = LinearRegression()
+        else:
+            model = RandomForestRegressor(n_estimators=200, random_state=42)
+
+        model.fit(X_train, y_train)
+        st.success("Modèle entraîné avec succès ✅")
+        st.session_state["model"] = model
+        st.session_state["model_name"] = model_choice
+
+else:
+    if st.button("Comparer et choisir le meilleur modèle"):
+        results = []
+
+        # 1) Linear Regression
+        lr = LinearRegression()
+        lr.fit(X_train, y_train)
+        mae, rmse, r2 = eval_model(lr, X_test, y_test)
+        results.append(["Régression Linéaire", mae, rmse, r2, lr])
+
+        # 2) Random Forest
+        rf = RandomForestRegressor(n_estimators=300, random_state=42)
+        rf.fit(X_train, y_train)
+        mae, rmse, r2 = eval_model(rf, X_test, y_test)
+        results.append(["Random Forest", mae, rmse, r2, rf])
+
+        # Tableau résultats
+        res_df = pd.DataFrame(results, columns=["Modèle", "MAE", "RMSE", "R²", "_model_obj"])
+        st.dataframe(res_df.drop(columns=["_model_obj"]).style.format({"MAE": "{:.2f}", "RMSE": "{:.2f}", "R²": "{:.4f}"}), use_container_width=True)
+
+        # Choisir le meilleur (R² max)
+        best_row = res_df.sort_values("R²", ascending=False).iloc[0]
+        best_name = best_row["Modèle"]
+        best_model = best_row["_model_obj"]
+
+        st.success(f"✅ Meilleur modèle sélectionné : **{best_name}**")
+        st.session_state["model"] = best_model
+        st.session_state["model_name"] = best_name
 
 
 # =========================
