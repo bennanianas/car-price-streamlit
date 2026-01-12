@@ -17,13 +17,22 @@ st.title("🚗 Car Price Prediction")
 # =========================
 # 1) Upload
 # =========================
-uploaded_file = st.file_uploader("Choisir un fichier CSV", type=["csv"])
+st.subheader("Chargement du dataset")
 
-if uploaded_file is None:
-    st.info("Veuillez uploader un fichier CSV pour commencer.")
+use_demo = st.checkbox("Utiliser le dataset d'exemple (Cardekho)")
+
+uploaded_file = st.file_uploader("Ou uploader un autre fichier CSV", type=["csv"])
+
+if use_demo:
+    df = pd.read_csv("cardekho.csv")
+    st.success("Dataset d'exemple chargé ✅")
+elif uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+    st.success("Fichier CSV chargé avec succès ✅")
+else:
+    st.info("Veuillez choisir un mode de chargement pour continuer.")
     st.stop()
 
-df = pd.read_csv(uploaded_file)
 st.success("Fichier chargé avec succès ✅")
 
 st.subheader("Aperçu du dataset")
